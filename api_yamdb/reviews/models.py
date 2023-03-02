@@ -2,15 +2,16 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from users.models import User
+from titles.models import Title
 
 
 class Review(models.Model):
-    """title = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение'
-    )"""
+    )
     text = models.TextField(
         verbose_name='Текст',
     )
