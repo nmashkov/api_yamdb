@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'api.apps.ApiConfig',
     'reviews.apps.ReviewsConfig',
+    'titles.apps.TitlesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'api_yamdb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -122,4 +123,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
