@@ -2,8 +2,8 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import ModelViewSet
-from reviews.permissions import IsAdminModeratorOwnerOrReadOnly
 
+from reviews.permissions import IsAdminModeratorOwnerOrReadOnly
 from .models import Genre, Category, Title
 from .mixins import ModelMixinSet
 from .filters import TitleFilter
