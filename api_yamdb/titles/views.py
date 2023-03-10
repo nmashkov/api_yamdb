@@ -1,4 +1,8 @@
-from .serializers import CategorySerializer, TitleReadSerializer, GenreSerializer, TitleWriteSerializer
+from .serializers import (
+    CategorySerializer,
+    TitleReadSerializer,
+    GenreSerializer,
+    TitleWriteSerializer)
 from .models import Genre, Category, Title
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
