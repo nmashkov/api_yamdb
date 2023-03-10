@@ -1,16 +1,18 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets, mixins, filters
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.tokens import AccessToken
 
-from users.serializers import (
-    UserSignupSerializer,
-    UserRecieveTokenSerializer
-)
 from users.utils import create_confirmation_code
+# from users.permissions import IsAdmin
+from users.serializers import (
+    UserSignupSerializer, UserRecieveTokenSerializer,
+    UsersSerializer
+)
 
 
 User = get_user_model()
@@ -79,3 +81,19 @@ class CustomTokenViewBase(TokenViewBase):
                             status=status.HTTP_400_BAD_REQUEST)
         token = AccessToken.for_user(user)
         return Response({"token": f'{token}'}, status=status.HTTP_200_OK)
+
+
+class UsersViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    '''
+    Функция представления и регистрация пользователей.
+    Права доступа: Администратор.
+    '''
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    # permission_classes = (IsAdmin,)

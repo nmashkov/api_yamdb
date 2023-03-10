@@ -33,3 +33,16 @@ class UserRecieveTokenSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Имя пользователя должно быть меньше 151 символа.')
         return username
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    role = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')

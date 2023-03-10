@@ -3,9 +3,9 @@ from django.db import models
 
 
 class User(AbstractUser):
-    ADMIN = 1
-    MODERATOR = 2
-    USER = 3
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
 
     ROLES = (
         (ADMIN, 'admin'),
@@ -17,11 +17,10 @@ class User(AbstractUser):
         'Биография',
         blank=True
     )
-    role = models.PositiveSmallIntegerField(
+    role = models.SlugField(
         'Роль',
         choices=ROLES,
-        blank=True,
-        default=3
+        default=USER
     )
     confirmation_code = models.TextField(
         'Код подтверждения',
@@ -29,3 +28,15 @@ class User(AbstractUser):
     )
 
     REQUIRED_FIELDS = ['email']
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
