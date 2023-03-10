@@ -1,16 +1,17 @@
+from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+from rest_framework.viewsets import ModelViewSet
+from reviews.permissions import IsAdminModeratorOwnerOrReadOnly
+
+from .models import Genre, Category, Title
+from .mixins import ModelMixinSet
+from .filters import TitleFilter
 from .serializers import (
     CategorySerializer,
     TitleReadSerializer,
     GenreSerializer,
     TitleWriteSerializer)
-from .models import Genre, Category, Title
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter
-from django.db.models import Avg
-from reviews.permissions import IsAdminModeratorOwnerOrReadOnly
-from .mixins import ModelMixinSet
-from rest_framework.viewsets import ModelViewSet
-from .filters import TitleFilter
 
 
 class CategoryViewSet(ModelMixinSet):
