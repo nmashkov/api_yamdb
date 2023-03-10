@@ -3,11 +3,40 @@ from django.db import models
 
 
 class User(AbstractUser):
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
+
+    ROLES = (
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+        (USER, 'user'),
+    )
+
     bio = models.TextField(
         'Биография',
-        blank=True,
+        blank=True
     )
-    role = models.TextField(
+    role = models.SlugField(
         'Роль',
-        blank=True,
+        choices=ROLES,
+        default=USER
     )
+    confirmation_code = models.TextField(
+        'Код подтверждения',
+        blank=True
+    )
+
+    REQUIRED_FIELDS = ['email']
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
