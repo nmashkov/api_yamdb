@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 
 User = get_user_model()
@@ -36,7 +37,9 @@ class UserRecieveTokenSerializer(serializers.ModelSerializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
-    role = serializers.StringRelatedField(read_only=True)
+    email = serializers.EmailField(max_length=254)
+    username = serializers.RegexField(regex=r'^[a-zA-Z][a-zA-Z0-9-_.]{1,20}$',
+                                      max_length=150)
 
     class Meta:
         model = User
@@ -46,3 +49,10 @@ class UsersSerializer(serializers.ModelSerializer):
                   'last_name',
                   'bio',
                   'role')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email'],
+                message='Имя пользователя и почта должны быть уникальными.'
+            )
+        ]

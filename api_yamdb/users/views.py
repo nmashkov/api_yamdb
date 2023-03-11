@@ -1,14 +1,15 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from rest_framework import status, permissions, viewsets, mixins, filters
-from rest_framework.pagination import LimitOffsetPagination
+from django.core.mail import send_mail
+from rest_framework import status, permissions, viewsets, filters
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.tokens import AccessToken
 
 from users.utils import create_confirmation_code
-# from users.permissions import IsAdmin
+from users.permissions import IsAdmin
 from users.serializers import (
     UserSignupSerializer, UserRecieveTokenSerializer,
     UsersSerializer
@@ -49,7 +50,8 @@ class APIUserSignup(APIView):
             serializer.save(confirmation_code=new_confirmation_code)
         user = get_object_or_404(User, username=username)
         user.email_user(
-            'Confirmation code',
+            f'Confirmation code for {user.role} {user.username}',
+            f'Confirmation code for {user.role} {user.username}: '
             f'{new_confirmation_code}',
             from_email='yamdb@ya.ru'
         )
@@ -83,17 +85,52 @@ class CustomTokenViewBase(TokenViewBase):
         return Response({"token": f'{token}'}, status=status.HTTP_200_OK)
 
 
-class UsersViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.RetrieveModelMixin,
-                   viewsets.GenericViewSet):
+class UsersViewSet(viewsets.ModelViewSet):
     '''
     Функция представления и регистрация пользователей.
     Права доступа: Администратор.
     '''
+    http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all()
     serializer_class = UsersSerializer
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
     search_fields = ('username',)
-    # permission_classes = (IsAdmin,)
+    permission_classes = (IsAdmin,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        if User.objects.filter(username=username).exists():
+            user = User.objects.filter(username=username).first()
+            if str(user.email) != email:
+                return Response('Пользователь с таким именем уже существует.',
+                                status=status.HTTP_400_BAD_REQUEST)
+        elif User.objects.filter(email=email).exists():
+            user = User.objects.filter(email=email).first()
+            if str(user.username) != username:
+                return Response('Пользователь с такой почтой уже существует.',
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+    def perform_create(self, serializer):
+        new_confirmation_code = create_confirmation_code()
+        serializer.save(confirmation_code=new_confirmation_code)
+        email = serializer.data.get('email')
+        username = serializer.data.get('username')
+        role = serializer.data.get('role')
+        send_mail(
+            f'Confirmation code for {role} {username}',
+            f'Confirmation code for {role} {username}: '
+            f'{new_confirmation_code}',
+            'yamdb@ya.ru',
+            [f'{email}']
+        )
