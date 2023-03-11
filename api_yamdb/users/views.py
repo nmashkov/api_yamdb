@@ -24,7 +24,7 @@ class APIUserSignup(APIView):
     Регистрация нового пользователя и повторная отправка кода подтверждения.
     Права доступа: Доступно без токена.
     '''
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
         serializer = UserSignupSerializer(data=request.data)
@@ -63,7 +63,7 @@ class CustomTokenViewBase(TokenViewBase):
     Получение JWT-токена.
     Права доступа: Доступно без токена.
     '''
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
         serializer = UserRecieveTokenSerializer(data=request.data)
