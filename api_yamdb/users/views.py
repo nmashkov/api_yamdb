@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from rest_framework import status, permissions, viewsets, filters
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -87,17 +87,19 @@ class CustomTokenViewBase(TokenViewBase):
 
 class UsersViewSet(viewsets.ModelViewSet):
     '''
-    Функция представления и регистрация пользователей.
-    Права доступа: Администратор.
+    Функция представления и регистрации пользователей администратором
+    (Права доступа: Администратор),
+    А также получения и изменения данных своей учётной записи
+    (Права доступа: Любой авторизованный пользователь).
     '''
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all()
     serializer_class = UsersSerializer
+    permission_classes = (IsAdmin,)
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
-    lookup_field = 'username'
     search_fields = ('username',)
-    permission_classes = (IsAdmin,)
+    lookup_field = 'username'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -121,16 +123,22 @@ class UsersViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    def perform_create(self, serializer):
-        new_confirmation_code = create_confirmation_code()
-        serializer.save(confirmation_code=new_confirmation_code)
-        email = serializer.data.get('email')
-        username = serializer.data.get('username')
-        role = serializer.data.get('role')
-        send_mail(
-            f'Confirmation code for {role} {username}',
-            f'Confirmation code for {role} {username}: '
-            f'{new_confirmation_code}',
-            'yamdb@ya.ru',
-            [f'{email}']
+    @action(detail=False,
+            methods=['get', 'patch'],
+            permission_classes=[permissions.IsAuthenticated],
+            serializer_class=UsersSerializer,
+            url_path='me')
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = self.get_serializer(request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        user = get_object_or_404(User, username=request.user)
+        role = user.role
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=True
         )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=role)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -56,3 +56,10 @@ class UsersSerializer(serializers.ModelSerializer):
                 message='Имя пользователя и почта должны быть уникальными.'
             )
         ]
+
+    def validate_role(self, role):
+        ROLES = ["admin", "moderator", "user"]
+        if role not in ROLES:
+            raise serializers.ValidationError(
+                'Недопустимая роль пользователя.')
+        return role
