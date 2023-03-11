@@ -27,6 +27,9 @@ class User(AbstractUser):
         blank=True
     )
 
+    class Meta:
+        ordering = ['id']
+
     REQUIRED_FIELDS = ['email']
 
     @property
@@ -39,4 +42,6 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
+        if self.is_superuser or self.is_staff:
+            return True
         return self.role == self.ADMIN
