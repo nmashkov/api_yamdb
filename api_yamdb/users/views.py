@@ -93,7 +93,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     (Права доступа: Любой авторизованный пользователь).
     '''
     http_method_names = ['get', 'post', 'patch', 'delete']
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = UsersSerializer
     permission_classes = (IsAdmin,)
     pagination_class = PageNumberPagination

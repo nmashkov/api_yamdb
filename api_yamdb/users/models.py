@@ -27,9 +27,6 @@ class User(AbstractUser):
         blank=True
     )
 
-    class Meta:
-        ordering = ['id']
-
     REQUIRED_FIELDS = ['email']
 
     @property
