@@ -19,7 +19,7 @@ class CategoryViewSet(ModelMixinSet):
     """
     Получить список всех категорий. Права доступа: Доступно без токена
     """
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -32,7 +32,7 @@ class GenreViewSet(ModelMixinSet):
     """
     Получить список всех жанров. Права доступа: Доступно без токена
     """
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -47,7 +47,7 @@ class TitleViewSet(ModelViewSet):
     """
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
-    ).all()
+    ).all().order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend, )
