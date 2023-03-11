@@ -2,8 +2,9 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import PageNumberPagination
 
-from reviews.permissions import IsAdminModeratorOwnerOrReadOnly
+from users.permissions import IsAdminOrReadOnly
 from .models import Genre, Category, Title
 from .mixins import ModelMixinSet
 from .filters import TitleFilter
@@ -20,7 +21,8 @@ class CategoryViewSet(ModelMixinSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
     filter_backends = (SearchFilter, )
     search_fields = ('name', )
     lookup_field = 'slug'
@@ -32,7 +34,8 @@ class GenreViewSet(ModelMixinSet):
     """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name', )
     lookup_field = 'slug'
@@ -45,7 +48,8 @@ class TitleViewSet(ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend, )
     filterset_class = TitleFilter
 

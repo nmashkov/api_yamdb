@@ -1,15 +1,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 
 from titles.models import Title
+from users.permissions import IsAuthorModerAdminOrReadOnly
 from .models import Review
 from .serializers import CommentSerializer, ReviewSerializer
-from .permissions import IsAdminModeratorOwnerOrReadOnly
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsAdminModeratorOwnerOrReadOnly]
+    permission_classes = [IsAuthorModerAdminOrReadOnly]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         title = get_object_or_404(
@@ -27,7 +29,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAdminModeratorOwnerOrReadOnly]
+    permission_classes = [IsAuthorModerAdminOrReadOnly]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         review = get_object_or_404(
