@@ -23,6 +23,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
 
 class UserRecieveTokenSerializer(serializers.ModelSerializer):
+    confirmation_code = serializers.StringRelatedField()
 
     class Meta:
         model = User
@@ -58,7 +59,7 @@ class UsersSerializer(serializers.ModelSerializer):
         ]
 
     def validate_role(self, role):
-        ROLES = ["admin", "moderator", "user"]
+        ROLES = ['admin', 'moderator', 'user']
         if role not in ROLES:
             raise serializers.ValidationError(
                 'Недопустимая роль пользователя.')

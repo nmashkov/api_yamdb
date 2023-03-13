@@ -1,5 +1,8 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from rest_framework import status, permissions, viewsets, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,7 +11,6 @@ from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.tokens import AccessToken
 
-from users.utils import create_confirmation_code
 from users.permissions import IsAdmin
 from users.serializers import (
     UserSignupSerializer, UserRecieveTokenSerializer,
@@ -20,10 +22,10 @@ User = get_user_model()
 
 
 class APIUserSignup(APIView):
-    '''
+    """
     Регистрация нового пользователя и повторная отправка кода подтверждения.
     Права доступа: Доступно без токена.
-    '''
+    """
     permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
@@ -31,11 +33,9 @@ class APIUserSignup(APIView):
         serializer.is_valid(raise_exception=True)
         username = request.data.get('username')
         email = request.data.get('email')
-        new_confirmation_code = create_confirmation_code()
         if User.objects.filter(username=username, email=email).exists():
             user = User.objects.filter(username=username, email=email).first()
-            user.confirmation_code = new_confirmation_code
-            user.save()
+            token = default_token_generator.make_token(user)
         elif User.objects.filter(username=username).exists():
             user = User.objects.filter(username=username).first()
             if str(user.email) != email:
@@ -47,22 +47,24 @@ class APIUserSignup(APIView):
                 return Response('Пользователь с такой почтой уже существует.',
                                 status=status.HTTP_400_BAD_REQUEST)
         else:
-            serializer.save(confirmation_code=new_confirmation_code)
-        user = get_object_or_404(User, username=username)
-        user.email_user(
-            f'Confirmation code for {user.role} {user.username}',
-            f'Confirmation code for {user.role} {user.username}: '
-            f'{new_confirmation_code}',
-            from_email='yamdb@ya.ru'
+            serializer.save()
+            user = get_object_or_404(User, username=username)
+            token = default_token_generator.make_token(user)
+        send_mail(
+            f'Confirmation code for {user.role} {username}',
+            f'Confirmation code for {user.role} {username}: '
+            f'{token}',
+            settings.DEFAULT_FROM_EMAIL,
+            [f'{email}']
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CustomTokenViewBase(TokenViewBase):
-    '''
+    """
     Получение JWT-токена.
     Права доступа: Доступно без токена.
-    '''
+    """
     permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
@@ -78,7 +80,7 @@ class CustomTokenViewBase(TokenViewBase):
         else:
             return Response('Пользователь не найден.',
                             status=status.HTTP_404_NOT_FOUND)
-        if confirmation_code != str(user.confirmation_code):
+        if not default_token_generator.check_token(user, confirmation_code):
             return Response('Неверный код подтверждения.',
                             status=status.HTTP_400_BAD_REQUEST)
         token = AccessToken.for_user(user)
@@ -86,12 +88,12 @@ class CustomTokenViewBase(TokenViewBase):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
-    '''
+    """
     Функция представления и регистрации пользователей администратором
     (Права доступа: Администратор),
     А также получения и изменения данных своей учётной записи
     (Права доступа: Любой авторизованный пользователь).
-    '''
+    """
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all().order_by('id')
     serializer_class = UsersSerializer

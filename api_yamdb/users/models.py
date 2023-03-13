@@ -22,10 +22,6 @@ class User(AbstractUser):
         choices=ROLES,
         default=USER
     )
-    confirmation_code = models.TextField(
-        'Код подтверждения',
-        blank=True
-    )
 
     REQUIRED_FIELDS = ['email']
 
